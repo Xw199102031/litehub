@@ -1,54 +1,49 @@
-# litehub (Quarkus + Gradle + Java 21)
+# litehub — Admin UI & Usage
 
-这是一个 Quarkus 的基础后端骨架，适合在 LiteHub 项目中继续扩展出认证、用户、项目、任务等模块。
+This document describes the Admin management UI updates: a polished Admin Console that includes policy management and an audit-log browser with pagination.
 
-## 目录结构
+## What changed
+- Replaced the simple admin page with a responsive Admin Console (`/admin/permissions.html`) that has two tabs:
+  - Policies: list/add/delete Casbin policies, reload enforcer
+  - Audit Logs: browse audit logs with server-side pagination and simple filtering
+- The UI uses the existing Admin APIs (requires `ADMIN` role):
+  - GET /api/admin/casbin/policies
+  - POST /api/admin/casbin/policies
+  - DELETE /api/admin/casbin/policies
+  - POST /api/admin/casbin/reload
+  - GET /api/admin/audit-logs
 
-- `src/main/java/com/litehub`：应用代码
-  - `GreetingResource.java`：示例 REST 接口
-  - `HealthResource.java`：健康检查接口
-- `src/main/resources/application.properties`：应用配置
-- `src/test/java`：测试代码
+## How to use the Admin UI
+1. Log in as an Admin user via the /api/auth/login endpoint and obtain the JWT token.
+2. In your browser's console, set the token in localStorage:
 
-## 本地运行
-
-1. 确认已安装 JDK 21 与 Gradle
-2. 启动开发模式：
-   ```bash
-   ./gradlew quarkusDev
+   ```js
+   localStorage.setItem('litehub_token', '<YOUR_JWT_TOKEN>');
    ```
-3. 访问：
-   - http://localhost:8080/api/hello
-   - http://localhost:8080/api/health
-   - http://localhost:8080/q/openapi
 
-## 打包
+3. Open the Admin Console at:
 
-```bash
-./gradlew build
-java -jar build/quarkus-app/quarkus-run.jar
-```
+   ```
+   http://localhost:8080/admin/permissions.html
+   ```
 
-## Docker
+4. Policies tab
+   - Add a policy by filling Subject / Object / Action and clicking `Add Policy`.
+   - Delete a policy via the Delete button on the row.
+   - Click `Reload` to force the enforcer to reload policies from persistent storage.
 
-```bash
-docker build -t litehub:latest .
-docker run -p 8080:8080 litehub:latest
-```
+5. Audit Logs tab
+   - Use filters (userId or action) and pagination controls to browse audit events.
+   - Page size and navigation are available.
 
-## 说明
+## Notes for Operators
+- The Admin Console is a demo UI for convenience. For production, restrict access to Admins and protect the UI (e.g. VPN, IP allowlist, MFA).
+- The UI expects the Admin APIs to return data in the `ApiResponse` envelope (i.e., `.data` contains payload). If you customized those responses, update the UI accordingly.
 
-- 依赖已经包含：Quarkus、REST、OpenAPI、Panache、PostgreSQL、Docker
-- 当前是基础框架，后续可以继续扩展：
-  - 用户认证 / JWT
-  - 任务管理
-  - 项目/仓库模块
-  - WebSocket / 事件推送
-  - Redis / Kafka / Elasticsearch
-  - PostgreSQL schema migration
+## Next steps / Improvements
+- Add authentication for the UI page and server-side session handling.
+- Add detailed audit log viewing (drilldowns) and CSV export.
+- Add search and filtering for policies by subject/object/action.
+- Integrate with role-management pages (assign roles/users) in the same Admin console.
 
-## 端点示例
 
-- `GET /api/hello`：返回欢迎信息
-- `GET /api/health`：返回应用健康状态
-- `GET /q/openapi`：OpenAPI 文档

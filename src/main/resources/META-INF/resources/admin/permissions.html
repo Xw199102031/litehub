@@ -2,64 +2,201 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>LiteHub Policy Admin</title>
+  <title>LiteHub Admin Console</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body{font-family:Arial;margin:20px}
-    table{border-collapse:collapse;width:100%}
-    th,td{border:1px solid #ddd;padding:8px}
-    th{background:#f4f4f4}
-    input,select{padding:6px;margin:4px}
+    :root{--bg:#f7fafc;--card:#ffffff;--muted:#6b7280;--accent:#2563eb}
+    body{font-family:Inter, Arial, sans-serif;background:var(--bg);margin:0;color:#0f172a}
+    header{background:linear-gradient(90deg,#0ea5e9, #6366f1);color:white;padding:20px}
+    .container{max-width:1100px;margin:20px auto;padding:0 16px}
+    h1{margin:0;font-size:20px}
+    .card{background:var(--card);border-radius:8px;padding:16px;box-shadow:0 1px 3px rgba(15,23,42,0.06);margin-top:16px}
+    .tabs{display:flex;gap:8px}
+    .tab{padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:600;color:var(--muted)}
+    .tab.active{background:#eef2ff;color:var(--accent)}
+    .form-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    input,select,button{padding:8px;border:1px solid #e6e9ef;border-radius:6px}
+    button{cursor:pointer;background:var(--accent);color:white;border:none}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:8px;border-bottom:1px solid #e6e9ef;text-align:left;font-size:14px}
+    th{background:#fbfdff;color:#334155}
+    .muted{color:var(--muted);font-size:13px}
+    .pager{display:flex;gap:8px;align-items:center;margin-top:12px}
+    .small{font-size:13px;padding:6px 8px}
+    .danger{background:#ef4444}
+    .success{background:#10b981}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace}
+    .flex{display:flex;gap:8px}
+    .grow{flex:1}
+    .right{margin-left:auto}
+    .nowrap{white-space:nowrap}
+    pre{background:#0f172a;color:#e6eef8;padding:12px;border-radius:6px;overflow:auto}
   </style>
 </head>
 <body>
-  <h1>LiteHub Policy Admin</h1>
-  <div>
-    <label>Subject: <input id="subject" /></label>
-    <label>Object: <input id="object" /></label>
-    <label>Action: <input id="action" /></label>
-    <button id="addBtn">Add Policy</button>
-    <button id="reloadBtn">Reload</button>
+  <header>
+    <div class="container">
+      <h1>LiteHub — Admin Console</h1>
+      <div class="muted">Policy & Audit Management</div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <div class="tabs">
+        <div id="tabPolicies" class="tab active">Policies</div>
+        <div id="tabAudit" class="tab">Audit Logs</div>
+        <div class="right muted nowrap">Token in localStorage: <span id="tokenHint" class="mono"></span></div>
+      </div>
+
+      <div id="contentPolicies" style="margin-top:12px">
+        <div class="form-row">
+          <input id="subject" placeholder="Subject (role or user)" style="min-width:160px" />
+          <input id="object" placeholder="Object (e.g. project, task)" style="min-width:120px" />
+          <input id="action" placeholder="Action (e.g. create, read)" style="min-width:120px" />
+          <button id="addBtn">Add Policy</button>
+          <button id="reloadBtn" class="small">Reload Enforcer</button>
+          <div class="right">
+            <label class="muted small">Page size
+              <select id="policyPageSize" class="small">
+                <option>10</option><option>20</option><option>50</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <table id="policiesTable" aria-live="policies">
+          <thead><tr><th>Subject</th><th>Object</th><th>Action</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="pager" id="policiesPager">
+          <button id="polPrev" class="small">Prev</button>
+          <button id="polNext" class="small">Next</button>
+          <div class="muted small">Page <span id="polPage">1</span></div>
+        </div>
+      </div>
+
+      <div id="contentAudit" style="display:none;margin-top:12px">
+        <div class="form-row">
+          <input id="auditFilterUser" placeholder="Filter by userId" style="min-width:140px" />
+          <input id="auditFilterAction" placeholder="Filter by action (e.g. ADD_POLICY)" style="min-width:200px" />
+          <button id="auditSearch">Search</button>
+          <div class="right">
+            <label class="muted small">Page size
+              <select id="auditPageSize" class="small">
+                <option>10</option><option>20</option><option>50</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <table id="auditTable">
+          <thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Resource</th><th>Detail</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="pager" id="auditPager">
+          <button id="auditPrev" class="small">Prev</button>
+          <button id="auditNext" class="small">Next</button>
+          <div class="muted small">Page <span id="auditPage">1</span></div>
+        </div>
+      </div>
+    </div>
   </div>
-  <h2>Policies</h2>
-  <table id="policies">
-    <thead><tr><th>Subject</th><th>Object</th><th>Action</th><th>Action</th></tr></thead>
-    <tbody></tbody>
-  </table>
 
 <script>
-const token = localStorage.getItem('litehub_token');
-if(!token){
-  alert('Please login and set token in localStorage as litehub_token');
+const TOKEN_KEY = 'litehub_token';
+const token = localStorage.getItem(TOKEN_KEY) || '';
+document.getElementById('tokenHint').textContent = token ? 'set' : 'not set';
+
+function authHeaders() {
+  return token ? {'Authorization':'Bearer '+token} : {};
 }
 
-async function load(){
-  const res = await fetch('/api/admin/casbin/policies',{headers:{'Authorization':'Bearer '+localStorage.getItem('litehub_token')}});
+// Tabs
+const tabPolicies = document.getElementById('tabPolicies');
+const tabAudit = document.getElementById('tabAudit');
+const contentPolicies = document.getElementById('contentPolicies');
+const contentAudit = document.getElementById('contentAudit');
+
+tabPolicies.addEventListener('click', ()=>{tabPolicies.classList.add('active');tabAudit.classList.remove('active');contentPolicies.style.display='block';contentAudit.style.display='none';});
+tabAudit.addEventListener('click', ()=>{tabAudit.classList.add('active');tabPolicies.classList.remove('active');contentAudit.style.display='block';contentPolicies.style.display='none';loadAudit();});
+
+// Policies
+let polPage = 1;
+const polSizeSelect = document.getElementById('policyPageSize');
+async function loadPolicies(){
+  const res = await fetch('/api/admin/casbin/policies',{headers:authHeaders()});
   const j = await res.json();
-  const tbody = document.querySelector('#policies tbody');
-  tbody.innerHTML = '';
-  (j.data || []).forEach(p=>{
+  const data = j.data || [];
+
+  // client-side pagination since API returns all policies
+  const size = parseInt(polSizeSelect.value,10);
+  const start = (polPage-1)*size;
+  const pageItems = data.slice(start,start+size);
+  const tbody = document.querySelector('#policiesTable tbody'); tbody.innerHTML='';
+  pageItems.forEach(p=>{
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${p[0]}</td><td>${p[1]}</td><td>${p[2]}</td><td><button data-sub='${p[0]}' data-obj='${p[1]}' data-act='${p[2]}' class='del'>Delete</button></td>`;
+    tr.innerHTML = `<td>${escapeHtml(p[0]||'')}</td><td>${escapeHtml(p[1]||'')}</td><td>${escapeHtml(p[2]||'')}</td><td><button class='del' data-sub='${encodeURIComponent(p[0]||'')}' data-obj='${encodeURIComponent(p[1]||'')}' data-act='${encodeURIComponent(p[2]||'')}' style='background:#ef4444'>Delete</button></td>`;
     tbody.appendChild(tr);
   });
-  document.querySelectorAll('.del').forEach(btn=>btn.addEventListener('click',async e=>{
-    const s=btn.getAttribute('data-sub');const o=btn.getAttribute('data-obj');const a=btn.getAttribute('data-act');
-    await fetch(`/api/admin/casbin/policies?subject=${encodeURIComponent(s)}&object=${encodeURIComponent(o)}&action=${encodeURIComponent(a)}`,{method:'DELETE',headers:{'Authorization':'Bearer '+localStorage.getItem('litehub_token')}});
-    load();
-  }));
 }
 
-document.getElementById('addBtn').addEventListener('click',async ()=>{
-  const subject=document.getElementById('subject').value;
-  const object=document.getElementById('object').value;
-  const action=document.getElementById('action').value;
-  await fetch('/api/admin/casbin/policies',{method:'POST',headers:{'Authorization':'Bearer '+localStorage.getItem('litehub_token'),'Content-Type':'application/json'},body:JSON.stringify({subject,object,action})});
-  load();
+document.getElementById('addBtn').addEventListener('click', async ()=>{
+  const subject = document.getElementById('subject').value;
+  const object = document.getElementById('object').value;
+  const action = document.getElementById('action').value;
+  if(!subject||!object||!action){alert('please fill all fields');return}
+  await fetch('/api/admin/casbin/policies',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},authHeaders()),body:JSON.stringify({subject,object,action})});
+  await loadPolicies();
 });
 
-document.getElementById('reloadBtn').addEventListener('click',async ()=>{await fetch('/api/admin/casbin/reload',{method:'POST',headers:{'Authorization':'Bearer '+localStorage.getItem('litehub_token')}}); alert('reloaded');});
+document.getElementById('reloadBtn').addEventListener('click', async ()=>{ await fetch('/api/admin/casbin/reload',{method:'POST',headers:authHeaders()}); alert('reloaded'); });
 
-load();
+document.getElementById('polPrev').addEventListener('click', ()=>{ if(polPage>1){polPage--; loadPolicies(); document.getElementById('polPage').textContent=polPage;} });
+document.getElementById('polNext').addEventListener('click', ()=>{ polPage++; loadPolicies(); document.getElementById('polPage').textContent=polPage; });
+polSizeSelect.addEventListener('change', ()=>{polPage=1; loadPolicies(); document.getElementById('polPage').textContent=polPage});
+
+// Delegate delete (since table re-rendered)
+document.querySelector('#policiesTable tbody').addEventListener('click', async e=>{
+  if(e.target && e.target.matches('button.del')){
+    const subject = decodeURIComponent(e.target.getAttribute('data-sub'));
+    const object = decodeURIComponent(e.target.getAttribute('data-obj'));
+    const action = decodeURIComponent(e.target.getAttribute('data-act'));
+    await fetch(`/api/admin/casbin/policies?subject=${encodeURIComponent(subject)}&object=${encodeURIComponent(object)}&action=${encodeURIComponent(action)}`,{method:'DELETE',headers:authHeaders()});
+    await loadPolicies();
+  }
+});
+
+// Audit logs with server-side pagination
+let auditPage = 0;
+async function loadAudit(){
+  const size = parseInt(document.getElementById('auditPageSize').value,10);
+  const userFilter = document.getElementById('auditFilterUser').value;
+  const actionFilter = document.getElementById('auditFilterAction').value;
+  const params = new URLSearchParams({page:auditPage, size});
+  if(userFilter) params.set('userId', userFilter);
+  if(actionFilter) params.set('action', actionFilter);
+  const res = await fetch('/api/admin/audit-logs?'+params.toString(),{headers:authHeaders()});
+  const j = await res.json();
+  const items = j.data.items || [];
+  const tbody = document.querySelector('#auditTable tbody'); tbody.innerHTML='';
+  items.forEach(it=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${escapeHtml(it.createdAt||'')}</td><td>${escapeHtml(it.actorUserId||'')}</td><td>${escapeHtml(it.action||'')}</td><td>${escapeHtml(it.resourceType||'')}${it.resourceId?(' / '+escapeHtml(it.resourceId):'')}</td><td><pre>${escapeHtml(JSON.stringify(it.detail||''))}</pre></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById('auditPrev').addEventListener('click', ()=>{ if(auditPage>0){auditPage--; document.getElementById('auditPage').textContent = auditPage+1; loadAudit()} });
+document.getElementById('auditNext').addEventListener('click', ()=>{ auditPage++; document.getElementById('auditPage').textContent = auditPage+1; loadAudit() });
+document.getElementById('auditSearch').addEventListener('click', ()=>{ auditPage=0; document.getElementById('auditPage').textContent = 1; loadAudit() });
+document.getElementById('auditPageSize').addEventListener('change', ()=>{ auditPage=0; document.getElementById('auditPage').textContent = 1; loadAudit() });
+
+// small helpers
+function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/[&<>\"]+/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"})[c]||c); }
+
+// initial load
+loadPolicies();
 </script>
 </body>
 </html>
