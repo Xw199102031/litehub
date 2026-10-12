@@ -1,21 +1,54 @@
 # litehub (Quarkus + Gradle + Java 21)
 
-快速启动：
+这是一个 Quarkus 的基础后端骨架，适合在 LiteHub 项目中继续扩展出认证、用户、项目、任务等模块。
 
-1. 本地开发（热重载）:
+## 目录结构
+
+- `src/main/java/com/litehub`：应用代码
+  - `GreetingResource.java`：示例 REST 接口
+  - `HealthResource.java`：健康检查接口
+- `src/main/resources/application.properties`：应用配置
+- `src/test/java`：测试代码
+
+## 本地运行
+
+1. 确认已安装 JDK 21 与 Gradle
+2. 启动开发模式：
+   ```bash
    ./gradlew quarkusDev
+   ```
+3. 访问：
+   - http://localhost:8080/api/hello
+   - http://localhost:8080/api/health
+   - http://localhost:8080/q/openapi
 
-2. 打包：
-   ./gradlew build
-   java -jar build/quarkus-app/quarkus-run.jar
+## 打包
 
-3. Docker：
-   docker build -t litehub:latest .
-   docker run -p 8080:8080 litehub:latest
+```bash
+./gradlew build
+java -jar build/quarkus-app/quarkus-run.jar
+```
 
-常见端点：
-- GET /api/hello
-- OpenAPI: /openapi
+## Docker
 
-说明：
-- Quarkus 版本与插件版本请在 build.gradle.kts 中替换 REPLACE_WITH_QUARKUS_BOM_VERSION 和 REPLACE_WITH_QUARKUS_PLUGIN_VERSION
+```bash
+docker build -t litehub:latest .
+docker run -p 8080:8080 litehub:latest
+```
+
+## 说明
+
+- 依赖已经包含：Quarkus、REST、OpenAPI、Panache、PostgreSQL、Docker
+- 当前是基础框架，后续可以继续扩展：
+  - 用户认证 / JWT
+  - 任务管理
+  - 项目/仓库模块
+  - WebSocket / 事件推送
+  - Redis / Kafka / Elasticsearch
+  - PostgreSQL schema migration
+
+## 端点示例
+
+- `GET /api/hello`：返回欢迎信息
+- `GET /api/health`：返回应用健康状态
+- `GET /q/openapi`：OpenAPI 文档

@@ -1,20 +1,24 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     id("java")
-    id("io.quarkus") version "REPLACE_WITH_QUARKUS_PLUGIN_VERSION"
+    id("io.quarkus") version "3.15.4"
 }
 
 group = "com.litehub"
 version = "0.1.0-SNAPSHOT"
-java.sourceCompatibility = JavaVersion.VERSION_21
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation(enforcedPlatform("io.quarkus:quarkus-bom:REPLACE_WITH_QUARKUS_BOM_VERSION"))
+    implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.15.4"))
+    implementation("io.quarkus:quarkus-arc")
     implementation("io.quarkus:quarkus-resteasy-reactive")
     implementation("io.quarkus:quarkus-smallrye-openapi")
     implementation("io.quarkus:quarkus-hibernate-orm-panache")
@@ -25,8 +29,12 @@ dependencies {
     testImplementation("io.rest-assured:rest-assured")
 }
 
-tasks.withType<JavaCompile> {
+tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
 
 quarkus {
