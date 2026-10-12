@@ -1,0 +1,26 @@
+# Gradle
+.gradle/
+
+# Build output
+/build/
+
+# IntelliJ
+/.idea/
+*.iml
+
+# Eclipse
+/.classpath
+/.project
+/.settings/
+
+# Logs
+/logs/
+
+# OS
+.DS_Store
+
+# Java
+*.class
+
+# Others
+.gradle
