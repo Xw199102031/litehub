@@ -1,0 +1,19 @@
+# example policies: subject (role or user), object, action
+p, OWNER, project, read
+p, OWNER, project, write
+p, OWNER, project, delete
+p, OWNER, task, create
+p, OWNER, task, update
+p, OWNER, task, delete
+
+p, MAINTAINER, project, read
+p, MAINTAINER, project, write
+p, MAINTAINER, task, create
+p, MAINTAINER, task, update
+p, MAINTAINER, task, delete
+
+p, MEMBER, project, read
+p, MEMBER, task, create
+p, MEMBER, task, update
+
+p, VIEWER, project, read
