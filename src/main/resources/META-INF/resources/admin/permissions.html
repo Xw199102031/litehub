@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>LiteHub Policy Admin</title>
+  <style>
+    body{font-family:Arial;margin:20px}
+    table{border-collapse:collapse;width:100%}
+    th,td{border:1px solid #ddd;padding:8px}
+    th{background:#f4f4f4}
+    input,select{padding:6px;margin:4px}
+  </style>
+</head>
+<body>
+  <h1>LiteHub Policy Admin</h1>
+  <div>
+    <label>Subject: <input id="subject" /></label>
+    <label>Object: <input id="object" /></label>
+    <label>Action: <input id="action" /></label>
+    <button id="addBtn">Add Policy</button>
+    <button id="reloadBtn">Reload</button>
+  </div>
+  <h2>Policies</h2>
+  <table id="policies">
+    <thead><tr><th>Subject</th><th>Object</th><th>Action</th><th>Action</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+<script>
+const token = localStorage.getItem('litehub_token');
+if(!token){
+  alert('Please login and set token in localStorage as litehub_token');
+}
+
+async function load(){
+  const res = await fetch('/api/admin/casbin/policies',{headers:{'Authorization':'Bearer '+localStorage.getItem('litehub_token')}});
+  const j = await res.json();
+  const tbody = document.querySelector('#policies tbody');
+  tbody.innerHTML = '';
+  (j.data || []).forEach(p=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${p[0]}</td><td>${p[1]}</td><td>${p[2]}</td><td><button data-sub='${p[0]}' data-obj='${p[1]}' data-act='${p[2]}' class='del'>Delete</button></td>`;
+    tbody.appendChild(tr);
+  });
+  document.querySelectorAll('.del').forEach(btn=>btn.addEventListener('click',async e=>{
+    const s=btn.getAttribute('data-sub');const o=btn.getAttribute('data-obj');const a=btn.getAttribute('data-act');
+    await fetch(`/api/admin/casbin/policies?subject=${encodeURIComponent(s)}&object=${encodeURIComponent(o)}&action=${encodeURIComponent(a)}`,{method:'DELETE',headers:{'Authorization':'Bearer '+localStorage.getItem('litehub_token')}});
+    load();
+  }));
+}
+
+document.getElementById('addBtn').addEventListener('click',async ()=>{
+  const subject=document.getElementById('subject').value;
+  const object=document.getElementById('object').value;
+  const action=document.getElementById('action').value;
+  await fetch('/api/admin/casbin/policies',{method:'POST',headers:{'Authorization':'Bearer '+localStorage.getItem('litehub_token'),'Content-Type':'application/json'},body:JSON.stringify({subject,object,action})});
+  load();
+});
+
+document.getElementById('reloadBtn').addEventListener('click',async ()=>{await fetch('/api/admin/casbin/reload',{method:'POST',headers:{'Authorization':'Bearer '+localStorage.getItem('litehub_token')}}); alert('reloaded');});
+
+load();
+</script>
+</body>
+</html>

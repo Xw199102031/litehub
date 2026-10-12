@@ -2,6 +2,10 @@ package com.litehub.resource;
 
 import com.litehub.auth.CasbinService;
 import com.litehub.exception.ApiResponse;
+import com.litehub.model.User;
+import com.litehub.service.AuditLogService;
+import com.litehub.service.UserService;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -20,6 +24,15 @@ public class CasbinResource {
     @Inject
     CasbinService casbinService;
 
+    @Inject
+    SecurityIdentity identity;
+
+    @Inject
+    UserService userService;
+
+    @Inject
+    AuditLogService auditLogService;
+
     @GET
     @Path("/policies")
     public Response listPolicies() {
@@ -29,11 +42,14 @@ public class CasbinResource {
 
     @POST
     @Path("/policies")
-    public Response addPolicy(Map<String, String> body) {
+    public Response addPolicy(Map<String, String> body, @HeaderParam("X-Forwarded-For") String xff, @HeaderParam("User-Agent") String ua) {
         String subject = body.get("subject");
         String object = body.get("object");
         String action = body.get("action");
-        boolean added = casbinService.addPolicy(subject, object, action);
+        String username = identity.getPrincipal().getName();
+        User u = userService.findByUsername(username);
+        Long userId = u != null ? u.id : null;
+        boolean added = casbinService.addPolicy(subject, object, action, userId, xff, ua);
         return Response.ok(ApiResponse.ok(Map.of("added", added))).build();
     }
 
@@ -41,8 +57,13 @@ public class CasbinResource {
     @Path("/policies")
     public Response removePolicy(@QueryParam("subject") String subject,
                                  @QueryParam("object") String object,
-                                 @QueryParam("action") String action) {
-        boolean removed = casbinService.removePolicy(subject, object, action);
+                                 @QueryParam("action") String action,
+                                 @HeaderParam("X-Forwarded-For") String xff,
+                                 @HeaderParam("User-Agent") String ua) {
+        String username = identity.getPrincipal().getName();
+        User u = userService.findByUsername(username);
+        Long userId = u != null ? u.id : null;
+        boolean removed = casbinService.removePolicy(subject, object, action, userId, xff, ua);
         return Response.ok(ApiResponse.ok(Map.of("removed", removed))).build();
     }
 
