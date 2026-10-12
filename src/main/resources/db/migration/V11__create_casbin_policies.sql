@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS casbin_policy (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
   subject VARCHAR(255) NOT NULL,
   object VARCHAR(255) NOT NULL,
   action VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP DEFAULT now(),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (subject, object, action)
 );
 

@@ -23,7 +23,7 @@ public class AuditLog extends PanacheEntityBase {
     @Column(name = "resource_id")
     public Long resourceId;
 
-    @Column(name = "detail", columnDefinition = "jsonb")
+    @Column(name = "detail", columnDefinition = "json")
     public String detail;
 
     @Column(name = "ip_address")
