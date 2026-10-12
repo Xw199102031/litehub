@@ -34,6 +34,9 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
     implementation("at.favre.lib:bcrypt:0.9.0")
 
+    // Caffeine cache for authorization caching
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("io.quarkus:quarkus-jdbc-h2")
