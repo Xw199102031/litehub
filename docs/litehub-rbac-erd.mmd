@@ -1,0 +1,73 @@
+```mermaid
+erDiagram
+    USERS ||--o{ USER_ROLES : has
+    ROLES ||--o{ USER_ROLES : maps
+    ROLES ||--o{ ROLE_PERMISSION : owns
+    PERMISSIONS ||--o{ ROLE_PERMISSION : grants
+
+    USERS ||--o{ PROJECTS : owns
+    PROJECTS ||--o{ PROJECT_ROLES : contains
+    USERS ||--o{ PROJECT_ROLES : assigned
+    ROLES ||--o{ PROJECT_ROLES : gives
+
+    USERS {
+        bigint id PK
+        varchar username
+        varchar password_hash
+        varchar email
+        varchar role
+        timestamp created_at
+    }
+
+    PROJECTS {
+        bigint id PK
+        varchar name
+        text description
+        bigint owner_id FK
+        timestamp created_at
+    }
+
+    TASKS {
+        bigint id PK
+        bigint project_id FK
+        varchar title
+        text description
+        varchar status
+        bigint assignee_id FK
+        timestamp created_at
+    }
+
+    ROLES {
+        bigint id PK
+        varchar name
+        varchar description
+        timestamp created_at
+    }
+
+    PERMISSIONS {
+        bigint id PK
+        varchar name
+        varchar description
+        timestamp created_at
+    }
+
+    ROLE_PERMISSION {
+        bigint role_id FK
+        bigint permission_id FK
+    }
+
+    USER_ROLES {
+        bigint id PK
+        bigint user_id FK
+        bigint role_id FK
+        timestamp created_at
+    }
+
+    PROJECT_ROLES {
+        bigint id PK
+        bigint project_id FK
+        bigint user_id FK
+        bigint role_id FK
+        timestamp created_at
+    }
+```
