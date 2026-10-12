@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS user_roles (
   role_id BIGINT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (user_id, role_id),
+  KEY idx_user_roles_user (user_id),
   CONSTRAINT fk_ur_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_ur_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 );
@@ -37,11 +38,9 @@ CREATE TABLE IF NOT EXISTS project_roles (
   role_id BIGINT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (project_id, user_id),
+  KEY idx_project_roles_project (project_id),
+  KEY idx_project_roles_user (user_id),
   CONSTRAINT fk_pr_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
   CONSTRAINT fk_pr_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_pr_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 );
-
-CREATE INDEX IF NOT EXISTS idx_project_roles_project ON project_roles(project_id);
-CREATE INDEX IF NOT EXISTS idx_project_roles_user ON project_roles(user_id);
-CREATE INDEX IF NOT EXISTS idx_user_roles_user ON user_roles(user_id);

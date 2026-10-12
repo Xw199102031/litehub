@@ -24,3 +24,6 @@
 
 # Others
 .gradle
+
+# Local JWT signing key (never commit private keys)
+/keys/

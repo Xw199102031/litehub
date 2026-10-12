@@ -12,6 +12,7 @@ import com.litehub.repository.UserRoleRepository;
 import com.litehub.repository.UserRepository;
 import com.litehub.model.User;
 import com.litehub.exception.ApiException;
+import com.litehub.auth.AuthorizationService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;

@@ -51,7 +51,10 @@ public class AuthorizationService {
 
         String sql = "select p.name from role_permission rp join permissions p on rp.permission_id = p.id where rp.role_id = ?1";
         @SuppressWarnings("unchecked")
-        java.util.List<String> list = projectRoleRepository.find(sql, pr.role.id).list();
+        java.util.List<String> list = projectRoleRepository.getEntityManager()
+                .createNativeQuery(sql)
+                .setParameter(1, pr.role.id)
+                .getResultList();
         return list.stream().collect(Collectors.toSet());
     }
 

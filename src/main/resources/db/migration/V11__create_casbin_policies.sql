@@ -4,9 +4,8 @@ CREATE TABLE IF NOT EXISTS casbin_policy (
   object VARCHAR(255) NOT NULL,
   action VARCHAR(255) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE (subject, object, action)
+  UNIQUE (subject, object, action),
+  KEY idx_casbin_policy_sub (subject),
+  KEY idx_casbin_policy_obj (object),
+  KEY idx_casbin_policy_act (action)
 );
-
-CREATE INDEX IF NOT EXISTS idx_casbin_policy_sub ON casbin_policy(subject);
-CREATE INDEX IF NOT EXISTS idx_casbin_policy_obj ON casbin_policy(object);
-CREATE INDEX IF NOT EXISTS idx_casbin_policy_act ON casbin_policy(action);
