@@ -90,8 +90,8 @@ litehub/
 | `quarkus.http.port` | 8080 | HTTP 服务端口 | - |
 | `quarkus.datasource.db-kind` | mysql | 数据库类型 | - |
 | `quarkus.datasource.username` | root | 数据库用户名 | `QUARKUS_DATASOURCE_USERNAME` |
-| `quarkus.datasource.password` | `nstnhFpBuiZcQ0OM/N3clw==` | 数据库密码 | `QUARKUS_DATASOURCE_PASSWORD` |
-| `quarkus.datasource.jdbc.url` | `jdbc:mysql://10.8.0.1:23306/litehub` | JDBC URL | `QUARKUS_DATASOURCE_JDBC_URL` |
+| `quarkus.datasource.password` | （无默认值，必填） | 数据库密码，必须通过环境变量注入 | `QUARKUS_DATASOURCE_PASSWORD` |
+| `quarkus.datasource.jdbc.url` | `jdbc:mysql://localhost:3306/litehub` | JDBC URL | `QUARKUS_DATASOURCE_JDBC_URL` |
 | `quarkus.hibernate-orm.database.generation` | none | 禁用 Hibernate 自动建表，由 Flyway 管理 | - |
 | `quarkus.flyway.migrate-at-start` | true | 启动时自动执行数据库迁移 | - |
 | `mp.jwt.verify.publickey.location` | classpath:keys/public.pem | JWT 公钥位置 | - |
